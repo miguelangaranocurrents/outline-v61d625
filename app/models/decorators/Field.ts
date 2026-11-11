@@ -1,6 +1,8 @@
 import type Model from "../base/Model";
 
-const fields = new Map<string, (string | number | symbol)[]>();
+// Keyed by the class itself rather than its name, as class names are not
+// unique once minified and would cause fields to leak between models.
+const fields = new Map<unknown, (string | number | symbol)[]>();
 
 /**
  * Returns the keys recorded as serializable fields on a model.
@@ -18,7 +20,7 @@ export const getFieldsForModel = <T extends Model>(target: T) =>
  * @returns the keys decorated with @Field.
  */
 export function getFieldsForModelClass(model: { name: string }) {
-  return fields.get(model.name) ?? [];
+  return fields.get(model) ?? [];
 }
 
 /**
@@ -29,8 +31,8 @@ export function getFieldsForModelClass(model: { name: string }) {
  * @param propertyKey the key to record as a field.
  */
 const Field = (target: Model, propertyKey: string | symbol) => {
-  const className = target.constructor.name;
-  fields.set(className, [...(fields.get(className) ?? []), propertyKey]);
+  const model = target.constructor;
+  fields.set(model, [...(fields.get(model) ?? []), propertyKey]);
 };
 
 export default Field;
